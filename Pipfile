@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+coderedcms="==2.1.*"
+wagtail="==4.2.*"
+django-environ = "*"
+django-sass-processor = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
+
+[scripts]
+manage = "python manage.py"
+server = "python manage.py runserver"
