@@ -379,7 +379,6 @@ $RECYCLE.BIN/
 *.lnk
 
 
-
 #######################################
 ### CodeRed CMS
 #######################################
@@ -397,3 +396,6 @@ protected/
 # replace "media/" with "media/images/"
 media/
 #media/images/
+
+#### docker-compose.override.yml ###
+docker-compose.override.yml

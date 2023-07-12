@@ -1,0 +1,12 @@
+services:
+  web:
+    ports:
+      - 443:443
+    environment:
+      LETSENCRYPT_HOST:
+      LETSENCRYPT_EMAIL:
+    volumes:
+      - web-certs:/etc/nginx/certs
+
+volumes:
+  web-certs:
