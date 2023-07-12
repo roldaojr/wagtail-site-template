@@ -1,0 +1,36 @@
+services:
+  django:
+    ports: []
+    environment:
+      VIRTUAL_HOST: default
+      VIRTUAL_PORT: 8000
+      VIRTUAL_PATH: /
+      MEDIA_URL: /media/
+
+  uploads:
+    image: nginx:alpine
+    restart: always
+    environment:
+      VIRTUAL_HOST: default
+      VIRTUAL_PORT: 80
+      VIRTUAL_PATH: /media
+      VIRTUAL_DEST: /
+    volumes:
+      - django-media:/usr/share/nginx/html
+
+  web:
+    image: nginxproxy/nginx-proxy:alpine
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      DEFAULT_HOST: default
+      LETSENCRYPT_HOST:
+      LETSENCRYPT_EMAIL:
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - web-certs:/etc/nginx/certs
+
+volumes:
+  web-certs:

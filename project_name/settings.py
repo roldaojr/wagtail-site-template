@@ -15,6 +15,7 @@ import os
 from django.utils.translation import gettext_lazy as _
 from email.utils import getaddresses
 from io import StringIO
+from urllib.parse import urlparse
 
 BASE_DIR = environ.Path(__file__) - 2
 PROJECT_DIR = environ.Path(__file__) - 1
@@ -33,12 +34,19 @@ if ENV_FILE:
 ENVIRONMENT = env("ENVIRONMENT", default="develop")
 DEBUG = env.bool("DEBUG", default=True)
 
+
+# Base URL to use when referring to full URLs within the Wagtail admin backend -
+# e.g. in notification emails. Don't include '/admin' or a trailing slash
+SITE_URL = env.str("SITE_URL", default="http://localhost")
+
 # secuirty settings
 SECRET_KEY = env.str("SECRET_KEY", default="dummy")
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 INTERNAL_IPS = env.bool("INTERNAL_IPS", default=["127.0.0.1"])
 USE_X_FORWARDED_HOST = True
 X_FRAME_OPTIONS = "SAMEORIGIN"
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[urlparse(SITE_URL).netloc])
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[SITE_URL])
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Application definition
 INSTALLED_APPS = [
@@ -72,9 +80,11 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
     "django.contrib.sitemaps",
     # aditional apps
+    "storages",
     "sass_processor",
 ]
 
@@ -90,6 +100,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     #  Error reporting. Uncomment this to receive emails when a 404 is triggered.
     # 'django.middleware.common.BrokenLinkEmailsMiddleware',
     # CMS functionality
@@ -160,17 +171,21 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
     "sass_processor.finders.CssFinder",
 ]
+STATIC_ROOT = env("STATIC_ROOT", default=BASE_DIR("static"))
+STATIC_URL = env("STATIC_URL", default="/static/")
+WHITENOISE_KEEP_ONLY_HASHED_FILES = True
+if not DEBUG:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 SASS_PROCESSOR_AUTO_INCLUDE = True
 SASS_OUTPUT_STYLE = "compact"
 
-
-STATIC_ROOT = env("STATIC_ROOT", default=BASE_DIR("static"))
-STATIC_URL = env("STATIC_URL", default="/static/")
-
 # Media files
 MEDIA_ROOT = env("MEDIA_ROOT", default=BASE_DIR("media"))
 MEDIA_URL = env("MEDIA_URL", default="/media/")
+DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024**2  # max upload data 20 MB
+FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
+FILE_UPLOAD_PERMISSIONS = 0o644
 
 # Email config
 ADMINS = getaddresses([env("ADMINS", default="")])
@@ -186,16 +201,11 @@ LOGIN_REDIRECT_URL = "wagtailadmin_home"
 # Wagtail settings
 WAGTAIL_SITE_NAME = "project_name"
 WAGTAIL_ENABLE_UPDATE_CHECK = False
-WAGTAILSEARCH_BACKENDS = {
-    "default": {
-        "BACKEND": "wagtail.search.backends.database",
-    }
-}
-
-# Base URL to use when referring to full URLs within the Wagtail admin backend -
-# e.g. in notification emails. Don't include '/admin' or a trailing slash
-WAGTAILADMIN_BASE_URL = "http://localhost"
-
+WAGTAILSEARCH_BACKENDS = {"default": {"BACKEND": "wagtail.search.backends.database"}}
+WAGTAIL_I18N_ENABLED = False
+WAGTAILADMIN_COMMENTS_ENABLED = False
+WAGTAILIMAGES_MAX_UPLOAD_SIZE = 8 * 1024**2  # 8 MB
+WAGTAILADMIN_BASE_URL = SITE_URL
 
 # Tags
 TAGGIT_CASE_INSENSITIVE = True
@@ -203,6 +213,23 @@ TAGGIT_CASE_INSENSITIVE = True
 # Sets default for primary key IDs
 # See https://docs.djangoproject.com/en/4.1/ref/models/fields/#bigautofield
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# logging
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {"format": "%(levelname)s %(asctime)s %(module)s %(message)s"}
+    },
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        }
+    },
+    "root": {"level": "INFO", "handlers": ["console"]},
+}
 
 # sentry error reporter
 SENTRY_DSN = env.str("SENTRY_DSN", default=None)

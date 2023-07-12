@@ -1,0 +1,40 @@
+version: '3.9'
+
+x-django: &django
+  build:
+    context: .
+    target: app-with-static
+  env_file: .env
+  environment:
+    ENVIRONMENT: staging
+    DEBUG: "false"
+    DATABASE_URL: postgres://django:${DB_PASSWORD:-django}@db/project_name
+    CACHE_URL: rediscache://redis
+  volumes:
+    - django-media:/app/media
+  depends_on:
+    - db
+    - redis
+
+services:
+  django:
+    << : *django
+    ports:
+      - 8000:8000
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: project_name
+      POSTGRES_USER: django
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-django}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+
+volumes:
+  db-data:
+  django-media:
