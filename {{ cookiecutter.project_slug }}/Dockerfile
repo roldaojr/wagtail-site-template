@@ -3,15 +3,12 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV PORT 8000
 EXPOSE 8000
-LABEL name="project_name"
-LABEL description="Wagtail CodeRed CMS website"
+LABEL name="{{ cookiecutter.project_name }}"
 ENV BUILD_DEPS="git"
 
-RUN useradd wagtail
 RUN mkdir /app
 WORKDIR /app
-ADD Pipfile.lock /app/
-ADD Pipfile /app/
+COPY Pipfile Pipfile.lock /app/
 RUN apt-get update && apt install -y --no-install-recommends $BUILD_DEPS \
     && python3 -m pip install --upgrade pip setuptools wheel \
     && pip3 install --no-cache-dir pipenv \

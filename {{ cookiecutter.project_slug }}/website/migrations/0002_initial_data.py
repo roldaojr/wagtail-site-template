@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django import VERSION as DJANGO_VERSION
 from django.db import migrations
+from django.conf import settings
 
 from wagtail.models import Locale
 
@@ -38,7 +39,7 @@ def initial_data(apps, schema_editor):
     # Create a new default site
     Site.objects.create(
         hostname="localhost",
-        site_name="project_name",
+        site_name=settings.WAGTAIL_SITE_NAME,
         root_page_id=homepage.id,
         is_default_site=True,
     )

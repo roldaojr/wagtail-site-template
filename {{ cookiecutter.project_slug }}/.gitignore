@@ -397,5 +397,5 @@ protected/
 media/
 #media/images/
 
-#### docker-compose.override.yml ###
+#### override files ###
 docker-compose.override.yml

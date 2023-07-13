@@ -8,7 +8,7 @@ x-django: &django
   environment:
     ENVIRONMENT: staging
     DEBUG: "false"
-    DATABASE_URL: postgres://django:${DB_PASSWORD:-django}@db/project_name
+    DATABASE_URL: postgres://{{ cookiecutter.project_slug }}:${DB_PASSWORD:-django}@db/{{ cookiecutter.project_slug }}
     CACHE_URL: rediscache://redis
     VIRTUAL_HOST: default
     VIRTUAL_PORT: 8000
@@ -28,8 +28,8 @@ services:
     image: postgres:15
     restart: always
     environment:
-      POSTGRES_DB: project_name
-      POSTGRES_USER: django
+      POSTGRES_DB: "{{ cookiecutter.project_slug }}"
+      POSTGRES_USER: "{{ cookiecutter.project_slug }}"
       POSTGRES_PASSWORD: ${DB_PASSWORD:-django}
     volumes:
       - db-data:/var/lib/postgresql/data
@@ -53,7 +53,7 @@ services:
     image: nginxproxy/nginx-proxy:alpine
     restart: always
     ports:
-      - ${PORT:-80}:80
+      - ${HTTP_PORT:-80}:80
     environment:
       DEFAULT_HOST: default
     volumes:
