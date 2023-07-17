@@ -39,7 +39,7 @@ services:
     image: redis:alpine
 
   uploads:
-    image: nginx:alpine
+    image: flashspys/nginx-static
     restart: always
     environment:
       VIRTUAL_HOST: default
@@ -47,7 +47,7 @@ services:
       VIRTUAL_PATH: /media
       VIRTUAL_DEST: /
     volumes:
-      - django-media:/usr/share/nginx/html
+      - django-media:/static
 
   web:
     image: nginxproxy/nginx-proxy:alpine
