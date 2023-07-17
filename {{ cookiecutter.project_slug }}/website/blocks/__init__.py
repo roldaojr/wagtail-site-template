@@ -4,9 +4,8 @@ from django.utils.translation import gettext_lazy as _
 from wagtail import blocks
 from .content_blocks import BasicContentBlock
 
-CONTENT_STREAMBLOCKS += [("h1", H1Block()), ("h2", H2Block())]
-
-CONTENT_BLOCKS = [
+CONTENT_STREAMBLOCKS += [
+    ("h1", H1Block()),
     ("content", BasicContentBlock(CONTENT_STREAMBLOCKS)),
 ]
 
@@ -15,7 +14,7 @@ LAYOUT_STREAMBLOCKS = [
         "hero",
         HeroBlock(
             [
-                ("row", GridBlock(CONTENT_BLOCKS)),
+                ("row", GridBlock(CONTENT_STREAMBLOCKS)),
                 (
                     "cardgrid",
                     CardGridBlock(
@@ -33,7 +32,7 @@ LAYOUT_STREAMBLOCKS = [
             ]
         ),
     ),
-    ("row", GridBlock(CONTENT_BLOCKS)),
+    ("row", GridBlock(CONTENT_STREAMBLOCKS)),
     (
         "cardgrid",
         CardGridBlock(
@@ -46,5 +45,8 @@ LAYOUT_STREAMBLOCKS = [
         "html",
         blocks.RawHTMLBlock(icon="code", form_classname="monospace", label=_("HTML")),
     ),
-    ("content", BasicContentBlock(CONTENT_BLOCKS)),
+    (
+        "content",
+        BasicContentBlock(CONTENT_STREAMBLOCKS),
+    ),
 ]

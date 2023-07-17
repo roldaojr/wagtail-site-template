@@ -8,6 +8,6 @@ class BasicContentBlock(BaseLayoutBlock):
     """
 
     class Meta:
-        template = "coderedcms/blocks/base_block.html"
+        template = "website/blocks/basic_block.html"
         icon = "placeholder"
         label = _("Basic block")
