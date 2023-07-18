@@ -3,7 +3,6 @@
     "project_slug": "{{ cookiecutter.project_name.lower()|replace(' ', '_')|replace('-', '_')|replace('.', '_')|trim() }}",
     "domain_name": "{{ cookiecutter.project_name | slugify }}.localtest.me",
     "http_port": 80,
-    "enable_https": false,
     "_copy_without_render": [
         "website"
     ]
