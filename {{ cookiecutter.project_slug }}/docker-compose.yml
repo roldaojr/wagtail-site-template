@@ -3,18 +3,20 @@ version: '3.9'
 x-django: &django
   build:
     context: .
-    target: app-with-static
+    target: app
   env_file: .env
   environment:
     ENVIRONMENT: staging
     DEBUG: "false"
     DATABASE_URL: postgres://{{ cookiecutter.project_slug }}:${DB_PASSWORD:-django}@db/{{ cookiecutter.project_slug }}
     CACHE_URL: rediscache://redis
-    VIRTUAL_HOST: default
+    MEDIA_URL: /files/media/
+    STATIC_URL: /files/static/
+    VIRTUAL_HOST: ${VIRTUAL_HOST:-localhost}
     VIRTUAL_PORT: 8000
     VIRTUAL_PATH: /
-    MEDIA_URL: /media/
   volumes:
+    - django-static:/app/static
     - django-media:/app/media
   depends_on:
     - db
@@ -25,7 +27,7 @@ services:
     << : *django
 
   db:
-    image: postgres:15
+    image: postgres:15-alpine
     restart: always
     environment:
       POSTGRES_DB: "{{ cookiecutter.project_slug }}"
@@ -38,16 +40,17 @@ services:
   redis:
     image: redis:alpine
 
-  uploads:
+  files:
     image: flashspys/nginx-static
     restart: always
     environment:
-      VIRTUAL_HOST: default
+      VIRTUAL_HOST: ${VIRTUAL_HOST:-localhost}
       VIRTUAL_PORT: 80
-      VIRTUAL_PATH: /media
+      VIRTUAL_PATH: /files
       VIRTUAL_DEST: /
     volumes:
-      - django-media:/static
+      - django-static:/static/static
+      - django-media:/static/media
 
   web:
     image: nginxproxy/nginx-proxy:alpine
@@ -55,11 +58,12 @@ services:
     ports:
       - ${HTTP_PORT:-80}:80
     environment:
-      DEFAULT_HOST: default
+      DEFAULT_HOST: localhost
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
 
 
 volumes:
   db-data:
+  django-static:
   django-media:
