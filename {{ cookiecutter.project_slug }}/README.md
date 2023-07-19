@@ -20,9 +20,22 @@ Run the development server:
 Go to http://localhost:8000/ in your browser, or http://localhost:8000/admin/ to log in and get to work!
 
 
-# Copy website data
+## Documentation links
 
-Dump data
+* To customize the content, design, and features of the site see Wagtail CRX](https://docs.coderedcorp.com/wagtail-crx/).
+* For deeper customization of backend code see [Wagtail](http://docs.wagtail.io/) and [Django](https://docs.djangoproject.com/).
+* For HTML template design see [Bootstrap](https://getbootstrap.com/).
+
+
+## Backup/Restore website data
+
+Clear non content data
+
+    python manage.py purge_embeds
+    python manage.py purge_revisions
+    python manage.py clear_wagtail_cache
+
+Dump website data
 
     python manage.py dumpdata --natural-foreign --indent 2 \
         -e contenttypes -e auth.permission -e postgres_search.indexentry \
@@ -38,14 +51,9 @@ You can also exclude -e wagtailcore.pagerevision to make your data.json clean
 
 Load data on new site
 
+    python manage.py clear_wagtail_cache
     python manage.py loaddata data.json
-
-
-## Documentation links
-
-* To customize the content, design, and features of the site see Wagtail CRX](https://docs.coderedcorp.com/wagtail-crx/).
-* For deeper customization of backend code see [Wagtail](http://docs.wagtail.io/) and [Django](https://docs.djangoproject.com/).
-* For HTML template design see [Bootstrap](https://getbootstrap.com/).
+    python manage.py wagtail_update_image_renditions
 
 ---
 
