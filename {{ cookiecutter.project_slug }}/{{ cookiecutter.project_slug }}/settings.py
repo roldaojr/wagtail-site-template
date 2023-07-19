@@ -258,3 +258,10 @@ if S3_MEDIA_BUCKET_URL:
 # develop environment settings
 if DEBUG:
     WAGTAIL_CACHE = False
+
+    # enable debug toolbar if available
+    try:
+        import debug_toolbar
+    finally:
+        INSTALLED_APPS += ["debug_toolbar"]
+        MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
