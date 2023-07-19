@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from coderedcms.blocks.base_blocks import BaseLayoutBlock
 
 
-class BasicContentBlock(BaseLayoutBlock):
+class BasicBlock(BaseLayoutBlock):
     """
     Simple block to render content
     """

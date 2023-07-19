@@ -2,11 +2,11 @@ from coderedcms.blocks import *
 from coderedcms.blocks.html_blocks import *
 from django.utils.translation import gettext_lazy as _
 from wagtail import blocks
-from .content_blocks import BasicContentBlock
+from .content_blocks import BasicBlock
 
 CONTENT_STREAMBLOCKS += [
     ("h1", H1Block()),
-    ("content", BasicContentBlock(CONTENT_STREAMBLOCKS)),
+    ("content", BasicBlock(CONTENT_STREAMBLOCKS)),
 ]
 
 LAYOUT_STREAMBLOCKS = [
@@ -47,6 +47,6 @@ LAYOUT_STREAMBLOCKS = [
     ),
     (
         "content",
-        BasicContentBlock(CONTENT_STREAMBLOCKS),
+        BasicBlock(CONTENT_STREAMBLOCKS),
     ),
 ]
