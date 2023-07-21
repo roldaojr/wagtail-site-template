@@ -34,15 +34,17 @@ DEBUG = env.bool("DEBUG", default=True)
 
 # Site URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
-SITE_URL = env.str("SITE_URL", default="http://localhost")
+VIRTUAL_HOST = env.str("VIRTUAL_HOST", default="localhost")
 
 # secuirty settings
 SECRET_KEY = env.str("SECRET_KEY", default="dummy")
 INTERNAL_IPS = env.bool("INTERNAL_IPS", default=["127.0.0.1"])
 USE_X_FORWARDED_HOST = True
 X_FRAME_OPTIONS = "SAMEORIGIN"
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[urlparse(SITE_URL).netloc])
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[SITE_URL])
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[VIRTUAL_HOST])
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS", default=[f"https://{VIRTUAL_HOST}"]
+)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Application definition
@@ -168,7 +170,7 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
     "sass_processor.finders.CssFinder",
 ]
-STATIC_ROOT = env("STATIC_ROOT", default=BASE_DIR("static"))
+STATIC_ROOT = env("STATIC_ROOT", default=BASE_DIR("staticfiles"))
 STATIC_URL = env("STATIC_URL", default="/static/")
 WHITENOISE_KEEP_ONLY_HASHED_FILES = True
 if not DEBUG:
@@ -202,7 +204,7 @@ WAGTAILSEARCH_BACKENDS = {"default": {"BACKEND": "wagtail.search.backends.databa
 WAGTAIL_I18N_ENABLED = False
 WAGTAILADMIN_COMMENTS_ENABLED = False
 WAGTAILIMAGES_MAX_UPLOAD_SIZE = 8 * 1024**2  # 8 MB
-WAGTAILADMIN_BASE_URL = SITE_URL
+WAGTAILADMIN_BASE_URL = f"https://{VIRTUAL_HOST}"
 
 # Tags
 TAGGIT_CASE_INSENSITIVE = True

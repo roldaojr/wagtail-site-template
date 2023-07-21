@@ -12,11 +12,10 @@ x-django: &django
     CACHE_URL: rediscache://redis
     MEDIA_URL: /files/media/
     STATIC_URL: /files/static/
-    VIRTUAL_HOST: ${VIRTUAL_HOST:-localhost}
     VIRTUAL_PORT: 8000
     VIRTUAL_PATH: /
   volumes:
-    - django-static:/app/static
+    - django-static:/app/staticfiles
     - django-media:/app/media
   depends_on:
     - db
@@ -30,8 +29,8 @@ services:
     image: postgres:15-alpine
     restart: always
     environment:
-      POSTGRES_DB: "{{ cookiecutter.project_slug }}"
-      POSTGRES_USER: "{{ cookiecutter.project_slug }}"
+      POSTGRES_DB: {{ cookiecutter.project_slug }}
+      POSTGRES_USER: {{ cookiecutter.project_slug }}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-django}
     volumes:
       - db-data:/var/lib/postgresql/data
@@ -44,10 +43,10 @@ services:
     image: flashspys/nginx-static
     restart: always
     environment:
-      VIRTUAL_HOST: ${VIRTUAL_HOST:-localhost}
       VIRTUAL_PORT: 80
       VIRTUAL_PATH: /files
       VIRTUAL_DEST: /
+    env_file: .env
     volumes:
       - django-static:/static/static
       - django-media:/static/media

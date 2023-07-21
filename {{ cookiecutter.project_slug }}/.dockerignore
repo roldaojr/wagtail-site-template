@@ -1,7 +1,10 @@
 # Django project
+/.*
 /media/
 /static/
 *.sqlite3
+Dockerfile
+docker-compose*
 
 # Python and others
 __pycache__

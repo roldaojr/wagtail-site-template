@@ -2,7 +2,7 @@ import multiprocessing
 import os
 
 wsgi_app = "{{ cookiecutter.project_slug }}.wsgi:application"
-bind_port = os.getenv("PORT", "8000")
+bind_port = os.getenv("VIRTUAL_PORT", "8000")
 bind = f"0.0.0.0:{bind_port}"
 workers = multiprocessing.cpu_count() * 2 + 1
 worker_class = "gthread"

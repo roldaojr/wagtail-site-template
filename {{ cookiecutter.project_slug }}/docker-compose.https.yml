@@ -7,6 +7,20 @@ services:
       LETSENCRYPT_EMAIL:
     volumes:
       - web-certs:/etc/nginx/certs
+  acme:
+    image: nginxproxy/acme-companion
+    restart: always
+    volumes_from:
+      - web
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - web-certs:/etc/nginx/certs:rw
+      - acme:/etc/acme.sh
+    environment:
+      DEFAULT_EMAIL:
+      ACME_CA_URI:
+      CA_BUNDLE: /etc/nginx/certs/ca.crt
 
 volumes:
   web-certs:
+  acme:

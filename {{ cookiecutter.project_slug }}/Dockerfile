@@ -1,10 +1,11 @@
 FROM python:3.10-slim as base
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-ENV PORT 8000
+ENV VIRTUAL_PORT 8000
 EXPOSE 8000
 LABEL name="{{ cookiecutter.project_name }}"
 ENV BUILD_DEPS="git"
+ENV DEBUG="false"
 
 RUN mkdir /app
 WORKDIR /app
