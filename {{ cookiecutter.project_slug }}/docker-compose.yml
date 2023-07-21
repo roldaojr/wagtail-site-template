@@ -3,7 +3,7 @@ version: '3.9'
 x-django: &django
   build:
     context: .
-    target: app
+    target: app{% if cookiecutter.whitenoise_static %}-with-static{% endif %}
   env_file: .env
   environment:
     ENVIRONMENT: staging
@@ -11,12 +11,12 @@ x-django: &django
     DATABASE_URL: postgres://{{ cookiecutter.project_slug }}:${DB_PASSWORD:-django}@db/{{ cookiecutter.project_slug }}
     CACHE_URL: rediscache://redis
     MEDIA_URL: /files/media/
-    STATIC_URL: /files/static/
+    STATIC_URL: {% if not cookiecutter.whitenoise_static %}/files{% endif %}/static/
     VIRTUAL_PORT: 8000
     VIRTUAL_PATH: /
   volumes:
-    - django-static:/app/staticfiles
     - django-media:/app/media
+{% if not cookiecutter.whitenoise_static %}    - django-static:/app/staticfiles{% endif %}
   depends_on:
     - db
     - redis
@@ -48,8 +48,8 @@ services:
       VIRTUAL_DEST: /
     env_file: .env
     volumes:
-      - django-static:/static/static
       - django-media:/static/media
+{% if not cookiecutter.whitenoise_static %}      - django-static:/static/static{% endif %}
 
   web:
     image: nginxproxy/nginx-proxy:alpine

@@ -174,7 +174,7 @@ STATIC_ROOT = env("STATIC_ROOT", default=BASE_DIR("staticfiles"))
 STATIC_URL = env("STATIC_URL", default="/static/")
 WHITENOISE_KEEP_ONLY_HASHED_FILES = True
 if not DEBUG:
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+    STATICFILES_STORAGE = "whitenoise.storage.Compressed{% if cookiecutter.whitenoise_static %}Manifest{% endif %}StaticFilesStorage"
 
 SASS_PROCESSOR_AUTO_INCLUDE = True
 SASS_OUTPUT_STYLE = "compact"
