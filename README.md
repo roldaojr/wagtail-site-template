@@ -1,5 +1,12 @@
-# cookiecutter-wagtail
+# Wagtail CRX website template
 
 ## Getting started
 
-cookiecutter gh:roldaojr/cookiecutter-wagtail
+Install the cookiecutter
+
+    pip install cookiecutter
+
+
+Run cookiecutter using this repo as template
+
+    cookiecutter gh:roldaojr/cookiecutter-wagtail
