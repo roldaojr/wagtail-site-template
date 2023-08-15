@@ -38,7 +38,7 @@ Clear non content data
 Dump website data
 
     python manage.py dumpdata --natural-foreign --indent 2 \
-        -e contenttypes -e auth.permission -e postgres_search.indexentry \
+        -e contenttypes -e auth.permission -e wagtail_search.indexentry \
         -e wagtailcore.groupcollectionpermission \
         -e wagtailcore.grouppagepermission -e wagtailimages.rendition \
         -e sessions > data.json
@@ -53,6 +53,9 @@ Load data on new site
 
     python manage.py clear_wagtail_cache
     python manage.py loaddata data.json
+
+Update images
+
     python manage.py wagtail_update_image_renditions
 
 ---

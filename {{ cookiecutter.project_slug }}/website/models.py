@@ -1,6 +1,7 @@
 """
 Create or customize your page models here.
 """
+from django.utils.translation import gettext_lazy as _
 from modelcluster.fields import ParentalKey
 from coderedcms.forms import CoderedFormField
 from coderedcms.models import (
@@ -20,7 +21,7 @@ class ArticlePage(CoderedArticlePage):
     """
 
     class Meta:
-        verbose_name = "Article"
+        verbose_name = _("Article")
         ordering = ["-first_published_at"]
 
     # Only allow this page to be created beneath an ArticleIndexPage.
@@ -36,7 +37,7 @@ class ArticleIndexPage(CoderedArticleIndexPage):
     """
 
     class Meta:
-        verbose_name = "Article Landing Page"
+        verbose_name = _("Article Landing Page")
 
     # Override to specify custom index ordering choice/default.
     index_query_pagemodel = "website.ArticlePage"
@@ -53,7 +54,7 @@ class FormPage(CoderedFormPage):
     """
 
     class Meta:
-        verbose_name = "Form"
+        verbose_name = _("Form")
 
     template = "coderedcms/pages/form_page.html"
 
@@ -90,6 +91,6 @@ class WebPage(CoderedWebPage):
     )
 
     class Meta:
-        verbose_name = "Web Page"
+        verbose_name = _("Web Page")
 
     template = "coderedcms/pages/web_page.html"

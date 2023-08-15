@@ -7,16 +7,18 @@ name = "pypi"
 coderedcms="==2.1.*"
 wagtail="==4.2.*"
 django-environ = "*"
-django-sass-processor = "*"
-psycopg2-binary = "*"
 gunicorn = "*"
+django-storages = "*"
+boto3 = "*"
+whitenoise = "*"
 django-redis = "*"
 sentry-sdk = "*"
-boto3 = "*"
-django-storages = "*"
-whitenoise = "*"
+psycopg2-binary = "*"
+{% if cookiecutter.sass %}
 libsass = "*"
 django-compressor = "*"
+django-sass-processor = "*"
+{% endif %}
 
 [dev-packages]
 

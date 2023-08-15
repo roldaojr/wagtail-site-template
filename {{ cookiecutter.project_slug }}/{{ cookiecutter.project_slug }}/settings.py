@@ -13,7 +13,6 @@ import os
 from django.utils.translation import gettext_lazy as _
 from email.utils import getaddresses
 from io import StringIO
-from urllib.parse import urlparse
 
 BASE_DIR = environ.Path(__file__) - 2
 PROJECT_DIR = environ.Path(__file__) - 1
@@ -172,12 +171,20 @@ STATICFILES_FINDERS = [
 ]
 STATIC_ROOT = env("STATIC_ROOT", default=BASE_DIR("staticfiles"))
 STATIC_URL = env("STATIC_URL", default="/static/")
+
+# {% if cookiecutter.whitenoise_static %}
+# Whitenoiise
 WHITENOISE_KEEP_ONLY_HASHED_FILES = True
 if not DEBUG:
-    STATICFILES_STORAGE = "whitenoise.storage.Compressed{% if cookiecutter.whitenoise_static %}Manifest{% endif %}StaticFilesStorage"
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# {% endif %}
 
+# {% if cookiecutter.sass %}
+# SASS preprocessor
+COMPRESS_OFFLINE = True
 SASS_PROCESSOR_AUTO_INCLUDE = True
 SASS_OUTPUT_STYLE = "compact"
+# {% endif %}
 
 # Media files
 MEDIA_ROOT = env("MEDIA_ROOT", default=BASE_DIR("media"))
@@ -213,7 +220,7 @@ TAGGIT_CASE_INSENSITIVE = True
 # See https://docs.djangoproject.com/en/4.1/ref/models/fields/#bigautofield
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# logging
+# logging - Enable log to console
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -257,13 +264,74 @@ if S3_MEDIA_BUCKET_URL:
     AWS_PRIVATE_STORAGE_BUCKET_NAME = AWS_STORAGE_BUCKET_NAME
     AWS_QUERYSTRING_EXPIRE = 3600
 
+# CRX TEAMPLTES
+CRX_FRONTEND_TEMPLATES_PAGES = {
+    # templates that are available for all page types
+    "*": [
+        ("", _("Default")),
+    ],
+}
+
+CRX_FRONTEND_TEMPLATES_BLOCKS = {
+    # templates that are available for all block types
+    "*": [
+        ("", _("Default")),
+    ],
+    "cardblock": [
+        (
+            "coderedcms/blocks/card_block.html",
+            _("Card"),
+        ),
+        (
+            "coderedcms/blocks/card_head.html",
+            _("Card with header"),
+        ),
+        (
+            "coderedcms/blocks/card_foot.html",
+            _("Card with footer"),
+        ),
+        (
+            "coderedcms/blocks/card_head_foot.html",
+            _("Card with header and footer"),
+        ),
+        (
+            "coderedcms/blocks/card_blurb.html",
+            _("Blurb - rounded image and no border"),
+        ),
+        (
+            "coderedcms/blocks/card_img.html",
+            _("Cover image - use image as background"),
+        ),
+    ],
+    "cardgridblock": [
+        (
+            "coderedcms/blocks/cardgrid_group.html",
+            _("Card group - attached cards of equal size"),
+        ),
+        (
+            "coderedcms/blocks/cardgrid_deck.html",
+            _("Card deck - separate cards of equal size"),
+        ),
+        (
+            "coderedcms/blocks/cardgrid_columns.html",
+            _("Card masonry - fluid brick pattern"),
+        ),
+    ],
+}
+
+
 # develop environment settings
 if DEBUG:
     WAGTAIL_CACHE = False
 
+    # allow localhost access
+    ALLOWED_HOSTS += ["localhost", "127.0.0.1"]
+
     # enable debug toolbar if available
     try:
         import debug_toolbar
-    finally:
+    except ModuleNotFoundError:
+        pass
+    else:
         INSTALLED_APPS += ["debug_toolbar"]
         MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]

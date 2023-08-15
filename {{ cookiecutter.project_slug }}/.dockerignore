@@ -1,7 +1,7 @@
 # Django project
 /.*
 /media/
-/static/
+/staticfiles/
 *.sqlite3
 Dockerfile
 docker-compose*
