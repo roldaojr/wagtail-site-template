@@ -5,29 +5,40 @@
 Make sure a recent version of Python is installed on your system.
 Open this directory in a command prompt, then:
 
-Install the software:
+Intall poetry package manager
 
-    pipenv install
+    pip install poetry
+
+Install the dependencies:
+
+    poetry install
 
 Create database
 
-    pipenv run manage migrate
+    poetry run python manage.py migrate
+
+Create the superuser:
+
+    poetry run python manage.py createsuperuser
 
 Run the development server:
 
-    pipenv run server
+    poetry run python manage.py runserver
 
 Go to http://localhost:8000/ in your browser, or http://localhost:8000/admin/ to log in and get to work!
 
-
 ## Documentation links
 
-* To customize the content, design, and features of the site see Wagtail CRX](https://docs.coderedcorp.com/wagtail-crx/).
-* For deeper customization of backend code see [Wagtail](http://docs.wagtail.io/) and [Django](https://docs.djangoproject.com/).
-* For HTML template design see [Bootstrap](https://getbootstrap.com/).
+-   To customize the content, design, and features of the site see
+    [Wagtail CRX](https://docs.coderedcorp.com/wagtail-crx/).
 
+-   For deeper customization of backend code see
+    [Wagtail](http://docs.wagtail.io/) and
+    [Django](https://docs.djangoproject.com/).
 
-## Backup/Restore website data
+-   For HTML template design see [Bootstrap](https://getbootstrap.com/).
+
+## Backup site data
 
 Clear non content data
 
@@ -37,27 +48,25 @@ Clear non content data
 
 Dump website data
 
-    python manage.py dumpdata --natural-foreign --indent 2 \
-        -e contenttypes -e auth.permission -e wagtail_search.indexentry \
-        -e wagtailcore.groupcollectionpermission \
-        -e wagtailcore.grouppagepermission -e wagtailimages.rendition \
-        -e sessions > data.json
+    poetry run python -Xutf8 manage.py dumpdata --all --natural-primary --natural-foreign --indent 2 -e contenttypes -e auth.permission -e wagtailsearch.indexentry -e wagtailcore.groupcollectionpermission -e wagtailcore.grouppagepermission -e wagtailimages.rendition -e sessions > website/fixtures/website.json
+    poetry run python manage.py mediabackup
 
-You can also exclude -e wagtailcore.pagerevision to make your data.json clean
-(it would only contains the latest version), but you need to edit data.json after dumpdata
+# Restore site data
 
-    "latest_revision_created_at": null,
-    "live_revision": null
-
-Load data on new site
+Clear cache
 
     python manage.py clear_wagtail_cache
-    python manage.py loaddata data.json
 
-Update images
+Load data and media files
+
+    poetry run python manage.py loaddata data.json
+    poetry run python manage.py mediarestore
+
+Update image renditions
 
     python manage.py wagtail_update_image_renditions
 
 ---
 
-Made with ♥ using [Wagtail](https://wagtail.io/) + [CodeRed Extensions](https://www.coderedcorp.com/cms/)
+Made with ♥ using [Wagtail](https://wagtail.io/) +
+[CodeRed Extensions](https://www.coderedcorp.com/cms/)

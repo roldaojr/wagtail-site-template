@@ -1,0 +1,17 @@
+{% load wagtailadmin_tags wagtailcore_tags wagtailimages_tags coderedcms_tags static %}
+<div {% if self.settings.custom_id %}id="{{ self.settings.custom_id }}"{% endif %}
+     class="section {{ self.settings.custom_css_class }}">
+  <div class="container">
+    {% if self.title %}<h1 class="section-title">{{ self.title }}</h1>{% endif %}
+    {% if self.subtitle %}<h2 class="section-subtitle">{{ self.subtitle }}</h2>{% endif %}
+    {% if self.image %}
+      {% image self.image fill-750x750 as section_image %}
+      <img class="img-fluid"
+           src="{{ section_image }}"
+           alt="{{ self.image.name }}">
+    {% endif %}
+    {% for block in self.content %}
+      {% include_block block %}
+    {% endfor %}
+  </div>
+</div>

@@ -1,10 +1,15 @@
+from django.views.generic import TemplateView
+from coderedcms import (
+    admin_urls as crx_admin_urls,
+    search_urls as crx_search_urls,
+    urls as crx_urls
+)
 from django.conf import settings
-from django.urls import include, path
 from django.contrib import admin
+from django.urls import include
+from django.urls import path
 from wagtail.documents import urls as wagtaildocs_urls
-from coderedcms import admin_urls as crx_admin_urls
-from coderedcms import search_urls as crx_search_urls
-from coderedcms import urls as crx_urls
+
 
 urlpatterns = [
     # Admin
@@ -18,24 +23,22 @@ urlpatterns = [
     # the page serving mechanism. This should be the last pattern in
     # the list:
     path("", include(crx_urls)),
-    # Alternatively, if you want pages to be served from a subpath
-    # of your site, rather than the site root:
-    #    path("pages/", include(crx_urls)),
 ]
 
 
+# fmt: off
 if settings.DEBUG:
     from django.conf.urls.static import static
-    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
     # Serve static and media files from development server
-    urlpatterns += staticfiles_urlpatterns()
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)  # type: ignore
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)  # type: ignore
+    urlpatterns += [path("404/", TemplateView.as_view(template_name="404.html"))]
 
-    # enable debug toolbar if available
     if "debug_toolbar" in settings.INSTALLED_APPS:
         import debug_toolbar
 
         urlpatterns = [
             path("__debug__/", include(debug_toolbar.urls)),
         ] + urlpatterns
+# fmt: on

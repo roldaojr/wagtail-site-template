@@ -8,19 +8,30 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
-import environ
-import os
-from django.utils.translation import gettext_lazy as _
 from email.utils import getaddresses
 from io import StringIO
+from pathlib import Path
+from urllib.parse import urlparse
 
-BASE_DIR = environ.Path(__file__) - 2
-PROJECT_DIR = environ.Path(__file__) - 1
+import environ
+import sentry_sdk
+import logging
+from django.utils.translation import gettext_lazy as _
+from sentry_sdk.integrations.django import DjangoIntegration
+
+from ._version import __version__
+
+
+BASE_DIR = Path(environ.Path(__file__) - 2)
+PROJECT_DIR = Path(environ.Path(__file__) - 1)
 
 # read enviroment variables
-env = environ.Env()
-if os.path.isfile(BASE_DIR(".env")):
-    env.read_env(BASE_DIR(".env"))
+env = environ.FileAwareEnv()
+
+# read .env from file if exists
+DOT_ENV = BASE_DIR / ".env"
+if DOT_ENV.is_file():
+    env.read_env()
 
 # read .env from enviroment variable
 ENV_FILE = env("ENV_FILE", default=None)
@@ -28,25 +39,23 @@ if ENV_FILE:
     env.read_env(StringIO(ENV_FILE))
 
 # environment settings
-ENVIRONMENT = env("ENVIRONMENT", default="develop")
+ENVIRONMENT = env.str("ENVIRONMENT", default="develop")
 DEBUG = env.bool("DEBUG", default=True)
 
-# Site URL to use when referring to full URLs within the Wagtail admin backend -
-# e.g. in notification emails. Don't include '/admin' or a trailing slash
+# application host name
 VIRTUAL_HOST = env.str("VIRTUAL_HOST", default="localhost")
 
 # secuirty settings
 SECRET_KEY = env.str("SECRET_KEY", default="dummy")
-INTERNAL_IPS = env.bool("INTERNAL_IPS", default=["127.0.0.1"])
+INTERNAL_IPS = env.list("INTERNAL_IPS", default=["127.0.0.1", VIRTUAL_HOST])
 USE_X_FORWARDED_HOST = True
 X_FRAME_OPTIONS = "SAMEORIGIN"
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[VIRTUAL_HOST])
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS", default=[f"https://{VIRTUAL_HOST}"]
 )
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# Application definition
 INSTALLED_APPS = [
     # This project
     "website",
@@ -69,7 +78,6 @@ INSTALLED_APPS = [
     "wagtail.search",
     "wagtail",
     "wagtail.contrib.settings",
-    "wagtail.contrib.modeladmin",
     "wagtail.contrib.table_block",
     "wagtail.admin",
     # Django
@@ -78,11 +86,11 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
     "django.contrib.sitemaps",
     # aditional apps
     "storages",
+    "dbbackup",
     "sass_processor",
 ]
 
@@ -98,9 +106,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
-    #  Error reporting. Uncomment this to receive emails when a 404 is triggered.
-    # 'django.middleware.common.BrokenLinkEmailsMiddleware',
     # CMS functionality
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     # Fetch from cache. Must be LAST.
@@ -127,7 +132,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "{{ cookiecutter.project_slug }}.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 DATABASE_URL = env("DATABASE_URL", default="sqlite:///db.sqlite3")
@@ -137,7 +141,7 @@ DATABASES = {"default": env.db(default="sqlite:///db.sqlite3")}
 CACHES = {"default": env.cache(default="locmemcache://")}
 
 # Password validation
-# https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
+# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -161,35 +165,44 @@ TIME_ZONE = env("TIME_ZONE", default="America/Recife")
 USE_I18N = True
 USE_TZ = True
 
+# file storage config
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
-
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
     "sass_processor.finders.CssFinder",
 ]
-STATIC_ROOT = env("STATIC_ROOT", default=BASE_DIR("staticfiles"))
+
+STATIC_ROOT = env.str("STATIC_ROOT", default=str(BASE_DIR / "static"))
 STATIC_URL = env("STATIC_URL", default="/static/")
 
 # {% if cookiecutter.whitenoise_static %}
 # Whitenoiise
 WHITENOISE_KEEP_ONLY_HASHED_FILES = True
 if not DEBUG:
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    STORAGES["staticfiles"]["BACKEND"] = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # {% endif %}
 
-# {% if cookiecutter.sass %}
-# SASS preprocessor
+# enable SASS preprocessor
 COMPRESS_OFFLINE = True
 SASS_PROCESSOR_AUTO_INCLUDE = True
 SASS_OUTPUT_STYLE = "compact"
-# {% endif %}
 
 # Media files
-MEDIA_ROOT = env("MEDIA_ROOT", default=BASE_DIR("media"))
-MEDIA_URL = env("MEDIA_URL", default="/media/")
-DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024**2  # max upload data 20 MB
+MEDIA_ROOT = env.str("MEDIA_ROOT", default=str(BASE_DIR / "media"))
+MEDIA_URL = env.str("MEDIA_URL", default="/media/")
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024**2  # max upload data 20 MB
 FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 FILE_UPLOAD_PERMISSIONS = 0o644
 
@@ -208,10 +221,11 @@ LOGIN_REDIRECT_URL = "wagtailadmin_home"
 WAGTAIL_SITE_NAME = "{{ cookiecutter.project_name }}"
 WAGTAIL_ENABLE_UPDATE_CHECK = False
 WAGTAILSEARCH_BACKENDS = {"default": {"BACKEND": "wagtail.search.backends.database"}}
+WAGTAILIMAGES_EXTENSIONS = ["gif", "jpg", "jpeg", "png", "webp", "svg"]
 WAGTAIL_I18N_ENABLED = False
 WAGTAILADMIN_COMMENTS_ENABLED = False
 WAGTAILIMAGES_MAX_UPLOAD_SIZE = 8 * 1024**2  # 8 MB
-WAGTAILADMIN_BASE_URL = f"https://{VIRTUAL_HOST}"
+WAGTAILADMIN_BASE_URL = env.str("WAGTAILADMIN_BASE_URL", f"https://{VIRTUAL_HOST}")
 
 # Tags
 TAGGIT_CASE_INSENSITIVE = True
@@ -237,34 +251,72 @@ LOGGING = {
     "root": {"level": "INFO", "handlers": ["console"]},
 }
 
-# sentry error reporter
+# Sentry error reporter
 SENTRY_DSN = env.str("SENTRY_DSN", default=None)
 if SENTRY_DSN:  # sentry is configured
     import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration, RedisIntegration
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.celery import CeleryIntegration
+    from sentry_sdk.integrations.redis import RedisIntegration
+    from sentry_sdk.integrations.logging import LoggingIntegration, ignore_logger
 
+    SENTRY_LOG_LEVEL = env.int("SENTRY_LOG_LEVEL", logging.INFO)
+    sentry_logging = LoggingIntegration(
+        level=SENTRY_LOG_LEVEL,  # Capture info and above as breadcrumbs
+        event_level=logging.ERROR,  # Send errors as events
+    )
     sentry_sdk.init(
         dsn=SENTRY_DSN,
-        integrations=[DjangoIntegration(), RedisIntegration()],
+        integrations=[sentry_logging, DjangoIntegration(), RedisIntegration(), CeleryIntegration()],
         environment=ENVIRONMENT,
         traces_sample_rate=1.0,
         send_default_pii=True,
     )
+    # ignore DisallowedHost
+    ignore_logger("django.security.DisallowedHost")
 
-# S3 emdia baucket
-S3_MEDIA_BUCKET_URL = env.url("S3_MEDIA_BUCKET_URL", default=None)
-if S3_MEDIA_BUCKET_URL:
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-    AWS_DEFAULT_ACL = "public-read"
-    AWS_QUERYSTRING_AUTH = False
-    AWS_PRIVATE_QUERYSTRING_AUTH = True
-    AWS_ACCESS_KEY_ID = S3_MEDIA_BUCKET_URL.username
-    AWS_SECRET_ACCESS_KEY = S3_MEDIA_BUCKET_URL.password
-    AWS_STORAGE_BUCKET_NAME = S3_MEDIA_BUCKET_URL.path.strip("/")
+
+if MEDIA_ROOT.startswith("s3://"):
+    # media root is a S3 bucket
+    MEDIA_BUCKET_URL = urlparse(MEDIA_ROOT)
+    STORAGES["default"]["BACKEND"] = "core.storages.CachedS3Storage"
+    if MEDIA_BUCKET_URL.path:
+        AWS_STORAGE_BUCKET_NAME = MEDIA_BUCKET_URL.path.strip("/")
+    else:
+        AWS_STORAGE_BUCKET_NAME = MEDIA_BUCKET_URL.hostname
     AWS_PRIVATE_STORAGE_BUCKET_NAME = AWS_STORAGE_BUCKET_NAME
-    AWS_QUERYSTRING_EXPIRE = 3600
+    AWS_ACCESS_KEY_ID = MEDIA_BUCKET_URL.username
+    AWS_SECRET_ACCESS_KEY = MEDIA_BUCKET_URL.password
+    AWS_DEFAULT_ACL = env.str("AWS_DEFAULT_ACL", default=None)
+    AWS_QUERYSTRING_AUTH = env.bool("AWS_QUERYSTRING_AUTH", default=False)
+    AWS_PRIVATE_QUERYSTRING_AUTH = True
+    AWS_QUERYSTRING_EXPIRE = env.int("AWS_QUERYSTRING_EXPIRE", default=3600)
+    AWS_S3_ENDPOINT_URL = env.str("AWS_S3_ENDPOINT_URL", default=None)
+    AWS_REGION_NAME = env.str("AWS_REGION_NAME", default=None)
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+    AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
+    AWS_S3_FILE_BUFFER_SIZE = 5242880
+    # cloudfront singing URLS
+    AWS_S3_CUSTOM_DOMAIN = env.str("AWS_S3_CUSTOM_DOMAIN", default=None)
+    AWS_CLOUDFRONT_KEY = env.str("AWS_CLOUDFRONT_KEY", default="").encode("ascii")
+    AWS_CLOUDFRONT_KEY_ID = env.str("AWS_CLOUDFRONT_KEY_ID", default=None)
+    # media convert
+    AWS_MEDIACONVERT_QUEUE = env.str("AWS_MEDIACONVERT_QUEUE", default=None)
+    AWS_MEDIACONVERT_ROLE = env.str("AWS_MEDIACONVERT_ROLE", default=None)
 
-# CRX TEAMPLTES
+
+DBBACKUP_STORAGE = "django.core.files.storage.FileSystemStorage"
+DBBACKUP_STORAGE_OPTIONS = {"location": "{{ cookiecutter.project_slug }}/backup"}
+DBBACKUP_FILENAME_TEMPLATE = "database-{datetime}.{extension}"
+DBBACKUP_MEDIA_FILENAME_TEMPLATE = "media-{datetime}.{extension}"
+DBBACKUP_SEND_EMAIL = False
+
+
+# CRX settings
+CRX_DISABLE_ANALYTICS = True
+CRX_DISABLE_FOOTER = True
+CRX_DISABLE_LAYOUT = True
+
 CRX_FRONTEND_TEMPLATES_PAGES = {
     # templates that are available for all page types
     "*": [
@@ -317,6 +369,13 @@ CRX_FRONTEND_TEMPLATES_BLOCKS = {
             _("Card masonry - fluid brick pattern"),
         ),
     ],
+    "basicblock": [
+        ("", _("Default")),
+        ("website/blocks/content_only_block.html", _("Content only")),
+    ],
+    "sectionblock": [
+        ("", _("Default")),
+    ]
 }
 
 

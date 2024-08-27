@@ -1,0 +1,7 @@
+{% load wagtailcore_tags %}
+<div {% if self.settings.custom_id %}id="{{ self.settings.custom_id }}"{% endif %}
+     class="{{ self.settings.custom_css_class }}">
+  {% for block in self.content %}
+    {% include_block block %}
+  {% endfor %}
+</div>

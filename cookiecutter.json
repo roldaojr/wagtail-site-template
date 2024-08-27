@@ -1,10 +1,13 @@
 {
-    "project_name": "Wagtail Website",
-    "project_slug": "{{ cookiecutter.project_name.lower()|replace(' ', '_')|replace('-', '_')|replace('.', '_')|trim() }}",
-    "domain_name": "{{ cookiecutter.project_name | slugify }}.localtest.me",
-    "whitenoise_static": true,
-    "http_port": 80,
-    "_copy_without_render": [
-        "website"
-    ]
+  "project_name": "Wagtail Website",
+  "project_slug": "{{ cookiecutter.project_name.lower()|replace(' ', '_')|replace('-', '_')|replace('.', '_')|trim() }}",
+  "domain_name": "{{ cookiecutter.project_name | slugify }}.localtest.me",
+  "whitenoise_static": true,
+  "add_event_page": false,
+  "add_location_page": false,
+  "_jinja2_env_vars": {
+    "lstrip_blocks": true,
+    "trim_blocks": false
+  },
+  "_copy_without_render": ["website"]
 }

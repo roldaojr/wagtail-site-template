@@ -1,52 +1,31 @@
-from coderedcms.blocks import *
-from coderedcms.blocks.html_blocks import *
-from django.utils.translation import gettext_lazy as _
-from wagtail import blocks
-from .content_blocks import BasicBlock
+from coderedcms.blocks import (
+    HTML_STREAMBLOCKS,
+    AccordionBlock,
+    CardBlock,
+    CarouselBlock,
+    FilmStripBlock,
+    GridBlock,
+    ImageGalleryBlock,
+    ReusableContentBlock,
+)
+
+from .content_blocks import BasicBlock, SectionBlock
+
+CONTENT_STREAMBLOCKS = HTML_STREAMBLOCKS + [
+    ("accordion", AccordionBlock()),
+    ("card", CardBlock(template="cepedi/blocks/card.html")),
+    ("carousel", CarouselBlock()),
+    ("film_strip", FilmStripBlock()),
+    ("image_gallery", ImageGalleryBlock()),
+    ("reusable_content", ReusableContentBlock()),
+]
 
 CONTENT_STREAMBLOCKS += [
-    ("h1", H1Block()),
-    ("content", BasicBlock(CONTENT_STREAMBLOCKS)),
+    ("basicblock", BasicBlock(CONTENT_STREAMBLOCKS)),
 ]
 
 LAYOUT_STREAMBLOCKS = [
-    (
-        "hero",
-        HeroBlock(
-            [
-                ("row", GridBlock(CONTENT_STREAMBLOCKS)),
-                (
-                    "cardgrid",
-                    CardGridBlock(
-                        [
-                            ("card", CardBlock()),
-                        ]
-                    ),
-                ),
-                (
-                    "html",
-                    blocks.RawHTMLBlock(
-                        icon="code", form_classname="monospace", label=_("HTML")
-                    ),
-                ),
-            ]
-        ),
-    ),
+    ("pagesectionblock", SectionBlock(CONTENT_STREAMBLOCKS)),
+    ("basicblock", BasicBlock(CONTENT_STREAMBLOCKS)),
     ("row", GridBlock(CONTENT_STREAMBLOCKS)),
-    (
-        "cardgrid",
-        CardGridBlock(
-            [
-                ("card", CardBlock()),
-            ]
-        ),
-    ),
-    (
-        "html",
-        blocks.RawHTMLBlock(icon="code", form_classname="monospace", label=_("HTML")),
-    ),
-    (
-        "content",
-        BasicBlock(CONTENT_STREAMBLOCKS),
-    ),
 ]
